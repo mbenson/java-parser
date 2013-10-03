@@ -14,10 +14,10 @@ import java.util.List;
  * @author mbenson
  *
  */
-public interface GenericCapable
+public interface GenericCapable<O extends JavaType<O>>
 {
    /**
     * Returns all the generic types associated with this object
     */
-   List<String> getGenericTypes();
+   List<? extends TypeVariable<O>> getTypeVariables();
 }

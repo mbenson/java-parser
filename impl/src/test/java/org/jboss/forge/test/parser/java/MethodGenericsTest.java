@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import org.jboss.forge.parser.JavaParser;
 import org.jboss.forge.parser.java.source.JavaClassSource;
 import org.jboss.forge.parser.java.source.MethodSource;
+import org.jboss.forge.parser.java.source.TypeVariableSource;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -24,10 +25,11 @@ public class MethodGenericsTest
       JavaClassSource javaClass = JavaParser.create(JavaClassSource.class);
       
       MethodSource<JavaClassSource> method = javaClass.addMethod();
-      method.addGenericType("T");
+      method.addTypeVariable().setName("T");
       
       Assert.assertTrue(method.toString().contains("<T>"));
-      method.removeGenericType("T");
+      Assert.assertTrue(method.getTypeVariables().get(0).getBounds().isEmpty());
+      method.removeTypeVariable("T");
       Assert.assertFalse(method.toString().contains("<T>"));
    }
 
@@ -37,10 +39,10 @@ public class MethodGenericsTest
       JavaClassSource javaClass = JavaParser.create(JavaClassSource.class);
       MethodSource<JavaClassSource> method = javaClass.addMethod();
 
-      method.addGenericType("I");
-      method.addGenericType("O");
+      method.addTypeVariable().setName("I");
+      method.addTypeVariable().setName("O");
       Assert.assertTrue(Pattern.compile("<I, *O>").matcher(method.toString()).find());
-      method.removeGenericType("I");
+      method.removeTypeVariable("I");
       Assert.assertTrue(method.toString().contains("<O>"));
    }
 
@@ -50,13 +52,15 @@ public class MethodGenericsTest
       JavaClassSource javaClass = JavaParser.create(JavaClassSource.class);
       MethodSource<JavaClassSource> method = javaClass.addMethod();
 
-      method.addGenericType("I");
-      method.addGenericType("O");
-      List<String> genericTypes = method.getGenericTypes();
-      Assert.assertNotNull(genericTypes);
-      Assert.assertEquals(2, genericTypes.size());
-      Assert.assertTrue(genericTypes.contains("I"));
-      Assert.assertTrue(genericTypes.contains("O"));
+      method.addTypeVariable().setName("I");
+      method.addTypeVariable().setName("O");
+      List<TypeVariableSource<JavaClassSource>> typeVariables = method.getTypeVariables();
+      Assert.assertNotNull(typeVariables);
+      Assert.assertEquals(2, typeVariables.size());
+      Assert.assertEquals("I", typeVariables.get(0).getName());
+      Assert.assertTrue(typeVariables.get(0).getBounds().isEmpty());
+      Assert.assertEquals("O", typeVariables.get(1).getName());
+      Assert.assertTrue(typeVariables.get(1).getBounds().isEmpty());
    }
 
 }
