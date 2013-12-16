@@ -12,28 +12,32 @@ import org.jboss.forge.parser.Origin;
 
 /**
  * @author <a href="mailto:lincolnbaxter@gmail.com">Lincoln Baxter, III</a>
- *
+ * 
  */
 public interface Type<O extends JavaType<O>> extends Origin<O>
 {
-   public abstract List<Type<O>> getTypeArguments();
+   abstract List<Type<O>> getTypeArguments();
 
-   public abstract String getName();
+   abstract String getName();
 
-   public abstract String getQualifiedName();
+   abstract String getQualifiedName();
 
-   public abstract Type<O> getParentType();
+   abstract Type<O> getParentType();
 
-   public abstract boolean isArray();
+   abstract boolean isArray();
 
-   public abstract int getArrayDimensions();
+   abstract int getArrayDimensions();
 
-   public abstract boolean isParameterized();
+   abstract boolean isParameterized();
 
-   public abstract boolean isPrimitive();
+   abstract boolean isPrimitive();
 
-   public abstract boolean isQualified();
+   abstract boolean isQualified();
 
-   public abstract boolean isWildcard();
+   abstract boolean isWildcard();
+
+   boolean isType(Class<?> type);
+
+   boolean isType(String name);
 
 }
