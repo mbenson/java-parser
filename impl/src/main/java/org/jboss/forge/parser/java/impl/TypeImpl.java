@@ -271,6 +271,5 @@ public class TypeImpl<O extends JavaType<O>> implements Type<O>
          }
       }
       return 0;
-
    }
 }
