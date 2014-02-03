@@ -320,6 +320,19 @@ public class PropertiesTest<O extends JavaSource<O> & PropertyHolderSource<O>>
    }
 
    @Test
+   public void testAddPropertyThenChangeType()
+   {
+      final PropertySource<O> property = source.addProperty("int", "something");
+      assertTrue(source.hasMethodSignature("getSomething"));
+      assertTrue(source.getMethod("getSomething").getReturnType().isType(int.class));
+      property.setType(boolean.class);
+      assertTrue(property.getType().isType(boolean.class));
+      assertFalse(source.hasMethodSignature("getSomething"));
+      assertTrue(source.hasMethodSignature("isSomething"));
+      assertTrue(source.getMethod("isSomething").getReturnType().isType(boolean.class));
+   }
+
+   @Test
    public void testSetName()
    {
       assumeFalse("foo".equals(name));

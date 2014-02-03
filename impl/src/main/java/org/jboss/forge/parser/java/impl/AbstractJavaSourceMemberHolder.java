@@ -500,7 +500,8 @@ public abstract class AbstractJavaSourceMemberHolder<O extends JavaSource<O> & P
          @Override
          public org.jboss.forge.parser.java.Type<O> getType()
          {
-            return typeObject;
+            final org.jboss.forge.parser.java.Type<O> result = super.getType();
+            return result == null ? typeObject : result;
          }
       };
 
