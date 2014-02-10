@@ -67,11 +67,11 @@ class PropertyImpl<O extends JavaSource<O> & PropertyHolderSource<O>> implements
    @Override
    public Type<O> getType()
    {
-      if (isReadable())
+      if (isAccessible())
       {
          return getAccessor().getReturnType();
       }
-      if (isWritable())
+      if (isMutable())
       {
          return getMutator().getParameters().get(0).getType();
       }
@@ -100,13 +100,13 @@ class PropertyImpl<O extends JavaSource<O> & PropertyHolderSource<O>> implements
    }
 
    @Override
-   public boolean isReadable()
+   public boolean isAccessible()
    {
       return getAccessor() != null;
    }
 
    @Override
-   public boolean isWritable()
+   public boolean isMutable()
    {
       return getMutator() != null;
    }
@@ -132,7 +132,7 @@ class PropertyImpl<O extends JavaSource<O> & PropertyHolderSource<O>> implements
       {
          type = getField().getType();
       }
-      else if (isReadable())
+      else if (isAccessible())
       {
          type = getAccessor().getReturnType();
       }
@@ -156,8 +156,7 @@ class PropertyImpl<O extends JavaSource<O> & PropertyHolderSource<O>> implements
       return null;
    }
 
-   @Override
-   public MethodSource<O> createAccessor()
+   private MethodSource<O> createAccessor()
    {
       Assert.isTrue(getAccessor() == null, "Accessor method already exists");
 
@@ -212,12 +211,12 @@ class PropertyImpl<O extends JavaSource<O> & PropertyHolderSource<O>> implements
       {
          result.setFinal(true);
       }
-      if (isReadable() && !getAccessor().isAbstract())
+      if (isAccessible() && !getAccessor().isAbstract())
       {
          removeAccessor();
          createAccessor();
       }
-      if (isWritable() && !getMutator().isAbstract())
+      if (isMutable() && !getMutator().isAbstract())
       {
          removeMutator();
          createMutator();
@@ -287,7 +286,7 @@ class PropertyImpl<O extends JavaSource<O> & PropertyHolderSource<O>> implements
          }
       };
 
-      if (isReadable())
+      if (isAccessible())
       {
          final MethodSource<O> accessor = getAccessor();
          final String prefix = accessor.getReturnType().isType(boolean.class) ? "is" : "get";
@@ -295,7 +294,7 @@ class PropertyImpl<O extends JavaSource<O> & PropertyHolderSource<O>> implements
          ((MethodDeclaration) accessor.getInternal()).accept(renameVisitor);
       }
 
-      if (isWritable())
+      if (isMutable())
       {
          final MethodSource<O> mutator = getMutator();
          mutator.setName(methodName("set", name));
@@ -350,9 +349,50 @@ class PropertyImpl<O extends JavaSource<O> & PropertyHolderSource<O>> implements
    }
 
    @Override
-   public PropertySource<O> removeAccessor()
+   public PropertySource<O> setAccessible(boolean accessible)
    {
-      if (isReadable())
+      if (isAccessible() != accessible)
+      {
+         if (accessible)
+         {
+            createAccessor();
+         }
+         else
+         {
+            removeAccessor();
+         }
+      }
+      return this;
+   }
+
+   @Override
+   public PropertySource<O> setMutable(boolean mutable)
+   {
+      if (isMutable() != mutable)
+      {
+         if (mutable)
+         {
+            if (hasField())
+            {
+               getField().setFinal(false);
+            }
+            createMutator();
+         }
+         else
+         {
+            if (hasField())
+            {
+               getField().setFinal(true);
+            }
+            removeMutator();
+         }
+      }
+      return this;
+   }
+   
+   private PropertySource<O> removeAccessor()
+   {
+      if (isAccessible())
       {
          getOrigin().removeMethod(getAccessor());
       }
@@ -362,7 +402,7 @@ class PropertyImpl<O extends JavaSource<O> & PropertyHolderSource<O>> implements
    @Override
    public PropertySource<O> removeMutator()
    {
-      if (isWritable())
+      if (isMutable())
       {
          getOrigin().removeMethod(getMutator());
       }
@@ -411,7 +451,7 @@ class PropertyImpl<O extends JavaSource<O> & PropertyHolderSource<O>> implements
     */
    public boolean isValid()
    {
-      return hasField() || isReadable() || isWritable();
+      return hasField() || isAccessible() || isMutable();
    }
 
    private String typeName()
@@ -455,4 +495,5 @@ class PropertyImpl<O extends JavaSource<O> & PropertyHolderSource<O>> implements
    {
       return prefix + Strings.capitalize(property);
    }
+
 }

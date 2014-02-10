@@ -505,18 +505,14 @@ public abstract class AbstractJavaSourceMemberHolder<O extends JavaSource<O> & P
          }
       };
 
-      result.createAccessor();
-
       if (!isInterface())
       {
          result.createField();
       }
-      if (!isEnum())
-      {
-         result.createMutator();
-      }
+      result.setAccessible(true);
+      result.setMutable(!isEnum());
 
-      return result;
+      return getProperty(name);
    }
 
    @Override
@@ -524,7 +520,7 @@ public abstract class AbstractJavaSourceMemberHolder<O extends JavaSource<O> & P
    {
       if (hasProperty(property))
       {
-         getProperty(property.getName()).removeAccessor().removeMutator().removeField();
+         getProperty(property.getName()).setMutable(false).setAccessible(false).removeField();
       }
       return this;
    }

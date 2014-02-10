@@ -127,15 +127,15 @@ public class PropertiesTest<O extends JavaSource<O> & PropertyHolderSource<O>>
    }
 
    @Test
-   public void testIsReadable()
+   public void testIsAccessible()
    {
-      assertEquals(existingItems.contains(PropertyComponent.ACCESSOR), source.getProperty(name).isReadable());
+      assertEquals(existingItems.contains(PropertyComponent.ACCESSOR), source.getProperty(name).isAccessible());
    }
 
    @Test
-   public void testIsWritable()
+   public void testIsMutable()
    {
-      assertEquals(existingItems.contains(PropertyComponent.MUTATOR), source.getProperty(name).isWritable());
+      assertEquals(existingItems.contains(PropertyComponent.MUTATOR), source.getProperty(name).isMutable());
    }
 
    @Test
@@ -195,13 +195,17 @@ public class PropertiesTest<O extends JavaSource<O> & PropertyHolderSource<O>>
    }
 
    @Test
-   public void testCreateAccessor()
+   public void testSetAccessibleTrue()
    {
       assumeFalse(existingItems.contains(PropertyComponent.ACCESSOR));
+      
+      final PropertySource<O> property = source.getProperty(name);
+      property.setAccessible(true);
+      assertTrue(property.isAccessible());
 
-      final MethodSource<O> accessor = source.getProperty(name).createAccessor();
+      final MethodSource<O> accessor = property.getAccessor();
+      assertNotNull(accessor);
       assertTrue(source.hasMethod(accessor));
-
       assertTrue(source.isInterface() || accessor.isPublic());
       assertTrue(accessor.getReturnType().isType(type));
       assertEquals(PropertyComponent.ACCESSOR.format(type, name), accessor.getName());
@@ -211,13 +215,16 @@ public class PropertiesTest<O extends JavaSource<O> & PropertyHolderSource<O>>
    }
 
    @Test
-   public void testCreateMutator()
+   public void testSetMutableTrue()
    {
       assumeFalse(existingItems.contains(PropertyComponent.MUTATOR));
 
-      final MethodSource<O> mutator = source.getProperty(name).createMutator();
-      assertTrue(source.hasMethod(mutator));
+      final PropertySource<O> property = source.getProperty(name);
+      property.setMutable(true);
 
+      final MethodSource<O> mutator = property.getMutator();
+      assertNotNull(mutator);
+      assertTrue(source.hasMethod(mutator));
       assertTrue(source.isInterface() || mutator.isPublic());
       assertTrue(mutator.isReturnTypeVoid());
       assertEquals(PropertyComponent.MUTATOR.format(type, name), mutator.getName());
@@ -237,22 +244,6 @@ public class PropertiesTest<O extends JavaSource<O> & PropertyHolderSource<O>>
       source.getProperty(name).createField();
    }
 
-   @Test(expected = IllegalStateException.class)
-   public void testCreateAccessorAgain()
-   {
-      source.getProperty(name).createAccessor();
-      assertFalse(existingItems.contains(PropertyComponent.ACCESSOR));
-      source.getProperty(name).createAccessor();
-   }
-
-   @Test(expected = IllegalStateException.class)
-   public void testCreateMutatorAgain()
-   {
-      source.getProperty(name).createAccessor();
-      assertFalse(existingItems.contains(PropertyComponent.MUTATOR));
-      source.getProperty(name).createAccessor();
-   }
-
    @Test
    public void testRemoveField()
    {
@@ -265,25 +256,44 @@ public class PropertiesTest<O extends JavaSource<O> & PropertyHolderSource<O>>
    }
 
    @Test
-   public void testRemoveAccessor()
+   public void testSetAccessibleFalse()
    {
       assumeTrue(existingItems.contains(PropertyComponent.ACCESSOR));
 
-      final MethodSource<O> accessor = source.getProperty(name).getAccessor();
+      final PropertySource<O> property = source.getProperty(name);
+      assertTrue(property.isAccessible());
+      final MethodSource<O> accessor = property.getAccessor();
+      assertNotNull(accessor);
       assertTrue(source.hasMethod(accessor));
-      source.getProperty(name).removeAccessor();
+      property.setAccessible(false);
+      assertFalse(property.isAccessible());
       assertFalse(source.hasMethod(accessor));
    }
 
    @Test
-   public void testRemoveMutator()
+   public void testSetMutableFalse()
    {
       assumeTrue(existingItems.contains(PropertyComponent.MUTATOR));
 
-      final MethodSource<O> mutator = source.getProperty(name).getMutator();
+      final PropertySource<O> property = source.getProperty(name);
+      assertTrue(property.isMutable());
+      final MethodSource<O> mutator = property.getMutator();
       assertTrue(source.hasMethod(mutator));
-      source.getProperty(name).removeMutator();
+      if (existingItems.contains(PropertyComponent.FIELD))
+      {
+         assertTrue(property.hasField());
+         assertNotNull(property.getField());
+         assertFalse(property.getField().isFinal());
+      }
+      property.setMutable(false);
       assertFalse(source.hasMethod(mutator));
+
+      if (existingItems.contains(PropertyComponent.FIELD))
+      {
+         assertTrue(property.hasField());
+         assertNotNull(property.getField());
+         assertTrue(property.getField().isFinal());
+      }
    }
 
    @Test
@@ -349,11 +359,9 @@ public class PropertiesTest<O extends JavaSource<O> & PropertyHolderSource<O>>
       {
          property.createField();
       }
-      if (!property.isReadable())
-      {
-         property.createAccessor();
-      }
-      if (!source.isEnum() && !property.isWritable())
+      property.setAccessible(true);
+
+      if (!source.isEnum() && !property.isMutable())
       {
          property.createMutator();
       }
@@ -375,7 +383,7 @@ public class PropertiesTest<O extends JavaSource<O> & PropertyHolderSource<O>>
       if (property.hasField())
       {
          assertTrue(property.getAccessor().getBody().contains("return foo;"));
-         assertTrue(!property.isWritable() || property.getMutator().getBody().contains("this.foo=foo;"));
+         assertTrue(!property.isMutable() || property.getMutator().getBody().contains("this.foo=foo;"));
       }
    }
 
@@ -431,10 +439,10 @@ public class PropertiesTest<O extends JavaSource<O> & PropertyHolderSource<O>>
       assumeTrue(existingItems.contains(PropertyComponent.ACCESSOR));
 
       final PropertySource<O> property = source.getProperty(name);
-      assertTrue(property.isReadable());
+      assertTrue(property.isAccessible());
       property.getAccessor().setName("foo");
 
-      assertFalse(property.isReadable());
+      assertFalse(property.isAccessible());
    }
 
    @Test
@@ -443,10 +451,10 @@ public class PropertiesTest<O extends JavaSource<O> & PropertyHolderSource<O>>
       assumeTrue(existingItems.contains(PropertyComponent.MUTATOR));
 
       final PropertySource<O> property = source.getProperty(name);
-      assertTrue(property.isWritable());
+      assertTrue(property.isMutable());
       property.getMutator().setName("foo");
 
-      assertFalse(property.isWritable());
+      assertFalse(property.isMutable());
    }
 
    private boolean sourceHasPropertyField(String fieldName)

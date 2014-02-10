@@ -39,22 +39,10 @@ public interface PropertySource<O extends JavaSource<O>> extends Property<O>,
    PropertySource<O> setType(JavaType<?> entity);
 
    /**
-    * Create the accessor method.
-    * 
-    * @throws IllegalStateException if property name unset or method already exists
-    */
-   MethodSource<O> createAccessor();
-
-   /**
     * Override.
     */
    @Override
    MethodSource<O> getAccessor();
-
-   /**
-    * Remove the accessor method.
-    */
-   PropertySource<O> removeAccessor();
 
    /**
     * Create the mutator method.
@@ -72,6 +60,16 @@ public interface PropertySource<O extends JavaSource<O>> extends Property<O>,
     * Remove the mutator method.
     */
    PropertySource<O> removeMutator();
+
+   /**
+    * Set whether this property is accessible.
+    */
+   PropertySource<O> setAccessible(boolean accessible);
+
+   /**
+    * Set whether this property is mutable.
+    */
+   PropertySource<O> setMutable(boolean mutable);
 
    /**
     * Create the storing field.

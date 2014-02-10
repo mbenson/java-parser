@@ -33,14 +33,14 @@ public interface Property<O extends JavaType<O>> extends Internal, Origin<O>, Na
    Field<O> getField();
 
    /**
-    * Learn whether this property is readable (i.e. has an accessor method).
+    * Learn whether this property is accessible (i.e. has an accessor method).
     */
-   boolean isReadable();
+   boolean isAccessible();
 
    /**
-    * Learn whether this property is writable (i.e. has a mutator method).
+    * Learn whether this property is mutable (i.e. has a mutator method).
     */
-   boolean isWritable();
+   boolean isMutable();
 
    /**
     * Get this property's accessor method.
@@ -51,4 +51,5 @@ public interface Property<O extends JavaType<O>> extends Internal, Origin<O>, Na
     * Get this property's mutator method.
     */
    Method<O, ?> getMutator();
+
 }
