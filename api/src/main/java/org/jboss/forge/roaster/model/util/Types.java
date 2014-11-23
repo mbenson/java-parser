@@ -13,6 +13,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jboss.forge.roaster.model.GenericCapable;
+import org.jboss.forge.roaster.model.source.Importer;
+import org.jboss.forge.roaster.model.source.JavaSource;
+
 /**
  * Types utilities
  *
@@ -403,6 +407,36 @@ public class Types
          }
       }
       return count;
+   }
+
+   /**
+    * Considering generics, recursively import the specified {@code type}.
+    * @param type to be imported
+    * @param importer target
+    */
+   public static <O extends JavaSource<O>> void recursiveImport(String type, Importer<O> importer)
+   {
+      Assert.notNull(type, "type is null");
+      if (isGeneric(type))
+      {
+         for (String typeParameter : getGenericsTypeParameter(type).split(","))
+         {
+            final String nestedType = WILDCARD_AWARE_TYPE_PATTERN.matcher(typeParameter).replaceFirst("$2");
+            if (nestedType != null)
+            {
+               recursiveImport(nestedType, importer);
+            }
+         }
+         type = stripGenerics(type.trim());
+      }
+      if (importer instanceof GenericCapable && ((GenericCapable<?>) importer).getTypeVariable(type) != null)
+      {
+         return;
+      }
+      if (importer.requiresImport(type) && !importer.hasImport(toSimpleName(type)))
+      {
+         importer.addImport(type);
+      }
    }
 
 }

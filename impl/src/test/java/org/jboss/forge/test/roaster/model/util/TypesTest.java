@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc. and/or its affiliates.
+ * Copyright 2012-2014 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Eclipse Public License version 1.0, available at
  * http://www.eclipse.org/legal/epl-v10.html
@@ -11,6 +11,8 @@ import static org.junit.Assert.*;
 
 import java.util.Vector;
 
+import org.jboss.forge.roaster.Roaster;
+import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.util.Types;
 import org.junit.Test;
 
@@ -153,6 +155,43 @@ public class TypesTest
       assertEquals("List<List<String>>", Types.toSimpleName("java.util.List<java.util.List<String>>"));
       assertEquals("List<? extends List<String>>",
                Types.toSimpleName("java.util.List<? extends java.util.List<String>>"));
+   }
+
+   @Test
+   public void testGetGenericsTypeParameter()
+   {
+      assertEquals("java.lang.String", Types.getGenericsTypeParameter("java.util.List<java.lang.String>"));
+      assertEquals("java.lang.String, java.util.List<java.lang.String>",
+               Types.getGenericsTypeParameter("java.util.Map<java.lang.String, java.util.List<java.lang.String>>"));
+   }
+
+   @Test
+   public void testRecursiveImport()
+   {
+      {
+         final JavaClassSource source = Roaster.create(JavaClassSource.class);
+         assertTrue(source.getImports().isEmpty());
+         Types.recursiveImport("java.util.Map<com.acme.Foo, java.util.List<? extends com.acme.Bar<com.acme.Baz>>>",
+                  source);
+         assertEquals(5, source.getImports().size());
+         assertEquals("java.util.Map", source.resolveType("Map"));
+         assertEquals("java.util.List", source.resolveType("List"));
+         assertEquals("com.acme.Foo", source.resolveType("Foo"));
+         assertEquals("com.acme.Bar", source.resolveType("Bar"));
+         assertEquals("com.acme.Baz", source.resolveType("Baz"));
+      }
+   }
+
+   @Test
+   public void testRecursiveImportWithTypeVariables()
+   {
+      final JavaClassSource source = Roaster.create(JavaClassSource.class);
+      source.addTypeVariable("X");
+      source.addTypeVariable("Y");
+      Types.recursiveImport("java.util.Map<? extends X, java.util.List<? super Y>>", source);
+      assertEquals(2, source.getImports().size());
+      assertEquals("java.util.Map", source.resolveType("Map"));
+      assertEquals("java.util.List", source.resolveType("List"));
    }
 
 }
